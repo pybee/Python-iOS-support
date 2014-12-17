@@ -68,76 +68,76 @@ The Python Interpreter can be installed into your iOS project by following these
 2. Add the frameworks built/downloaed (Python.framework & ffi.framework) to your project by dragging them from Finder into your xCode Project (check "Copy items if needed".)
 3. In your project organiser, right click the Python.framework and select "Show in Finder". Navigate to Versions > 2.7 > Resources. Drag the two files ("include" & "lib") into your project (**uncheck** "Copy files if needed", **uncheck** your project as a target)
 4. In Build Phases in your project settings link the following libraries:
-
-  - Python.framework
-  - ffi.framework
-  - libsqlite3.dylib
-  - libz.dylib
+- Python.framework
+- ffi.framework
+- libsqlite3.dylib
+- libz.dylib
 5. In Build Phases in your project settings add a New Run Script Phase. Leave the shell as `/bin/sh` and paste the following script in:
-```
-rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/Python.framework/Resources/lib $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
-rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/Python.framework/Resources/include $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
-rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/app $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
-rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/app_packages $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
-```
+
+::
+  rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/Python.framework/Resources/lib $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
+  rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/Python.framework/Resources/include $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
+  rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/app $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
+  rsync -pvtrL --exclude .hg --exclude .svn --exclude .git $PROJECT_DIR/app_packages $BUILT_PRODUCTS_DIR/$CONTENTS_FOLDER_PATH
+
 This script copies the necessary Python files into your app binary. If you find that your app compiles/archives, but fails to run correctly on devices, ensure that the paths above are correct for your project.
+
 6.  In main.m, add the following imports:
-```
-#import <Python/Python.h>
-#include <dlfcn.h>
-```
+
+.. code:: objc
+  #import <Python/Python.h>
+  #include <dlfcn.h>
+
 7. Update your main function in main.m as follows:
-```
-@autoreleasepool {
-        int ret = 0;
+.. code:: objc
+  @autoreleasepool {
+          int ret = 0;
 
-#if TARGET_IPHONE_SIMULATOR
-        putenv("TARGET_IPHONE_SIMULATOR=1");
-#else
-        putenv("TARGET_IPHONE=1");
-#endif
+  #if TARGET_IPHONE_SIMULATOR
+          putenv("TARGET_IPHONE_SIMULATOR=1");
+  #else
+          putenv("TARGET_IPHONE=1");
+  #endif
 
-        //Setting the Python environment
-        Py_SetProgramName(argv[0]);
+          //Setting the Python environment
+          Py_SetProgramName(argv[0]);
 
-        NSString * resourcePath = [[NSBundle mainBundle] resourcePath];
+          NSString * resourcePath = [[NSBundle mainBundle] resourcePath];
 
-        Py_SetPythonHome((char *)[resourcePath UTF8String]);
+          Py_SetPythonHome((char *)[resourcePath UTF8String]);
 
-        Py_Initialize();
-        PySys_SetArgv(argc, argv);
+          Py_Initialize();
+          PySys_SetArgv(argc, argv);
 
-        // If other modules are using thread, we need to initialize them before.
-        PyEval_InitThreads();
+          // If other modules are using thread, we need to initialize them before.
+          PyEval_InitThreads();
 
-        @try
-        {
-            // Start the Python app
-            ret = UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
-        }
-        @catch (NSException *exception)
-        {
-            NSLog(@"Error running Python application: %@", exception.reason);
-        }
+          @try
+          {
+              // Start the Python app
+              ret = UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
+          }
+          @catch (NSException *exception)
+          {
+              NSLog(@"Error running Python application: %@", exception.reason);
+          }
 
-        Py_Finalize();
-        return ret;
-    }
-```
+          Py_Finalize();
+          return ret;
+      }
 
 Running
 -------
 
 - To execute a Python script use `PyRun_SimplString();` or similar in your code.
 - If you embed the scripts in the app you can add the scripts to your project ("/app/ProjectName/main.py" in this case), and then use this code to run the script:
-```
-const char * prog = [[[NSBundle mainBundle] pathForResource:@"app/ProjectName/main" ofType:@"py"] cStringUsingEncoding:NSUTF8StringEncoding];
-FILE* fd = fopen(prog, "r");
-if (fd)
-{
-    PyRun_SimpleFileEx(fd, prog, 1);
-}
-```
+
+.. code:: objc
+  const char * prog = [[[NSBundle mainBundle] pathForResource:@"app/ProjectName/main" ofType:@"py"] cStringUsingEncoding:NSUTF8StringEncoding];
+  FILE* fd = fopen(prog, "r");
+  if (fd) {
+      PyRun_SimpleFileEx(fd, prog, 1);
+  }
 
 Acknowledgements
 ----------------
