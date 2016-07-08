@@ -1,6 +1,11 @@
 Python iOS Support
 ==================
 
+WARNING: This project is DEPRECATED
+-----------------------------------
+
+**It has been replaced by the multi-platform `Python-Apple-support<https://github.com/pybee/Python-Apple-support>`__ package**
+
 This is a meta-package for building a version of Python that can be embedded
 into an iOS, tvOS or watchOS project.
 
